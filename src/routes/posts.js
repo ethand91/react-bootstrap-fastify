@@ -43,9 +43,6 @@ const deletePostOptions = {
 };
 
 const postRoutes = (fastify, options, done) => {
-  fastify.get('/api/posts', postsOptions);
-  fastify.get('/api/posts/:id', postOptions);
-
   fastify
     .register(require('@fastify/auth'))
     .after(() => privatePostRoutes(fastify));
@@ -54,6 +51,16 @@ const postRoutes = (fastify, options, done) => {
 };
 
 const privatePostRoutes = (fastify) => {
+  fastify.get('/api/posts', {
+    preHandler: fastify.auth([fastify.verifyToken]),
+    ...postsOptions
+  });
+
+  fastify.get('/api/posts/:id', {
+    preHandler: fastify.auth([fastify.verifyToken]),
+    ...postOptions
+  });
+
   fastify.post('/api/posts', {
     preHandler: fastify.auth([fastify.verifyToken]),
     ...addPostOptions

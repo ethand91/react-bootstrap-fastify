@@ -1,8 +1,10 @@
 const fastify = require('fastify')({ logger: true });
+const path = require('path');
+const cors = require('@fastify/cors');
 
 const { verifyToken } = require('./auth/token');
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 fastify.register(require('@fastify/swagger'), {});
 fastify.register(require('@fastify/swagger-ui'), {
@@ -10,7 +12,7 @@ fastify.register(require('@fastify/swagger-ui'), {
   routePrefix: '/docs',
   swagger: {
     info: { title: 'API' },
-    host: 'localhost:3001',
+    host: 'localhost:3000',
     basePath: '',
     schemes: ['http', 'https'],
     consumes: ['application/json'],
@@ -22,9 +24,23 @@ fastify.register(require('@fastify/swagger-ui'), {
   }
 });
 
+fastify.register(cors, {
+  origin: '*' 
+});
 fastify.decorate('verifyToken', verifyToken);
 fastify.register(require('./routes/posts'));
 fastify.register(require('./routes/admins'));
+fastify.register(require('./routes/callback'));
+
+fastify.register(require('@fastify/static'), {
+  root: path.join(__dirname, '../app/build/'),
+  prefix: '/',
+  wildcard: false
+});
+
+fastify.setNotFoundHandler(function (req, res) {
+  res.sendFile('index.html');
+});
 
 const startServer = async () => {
   try {
